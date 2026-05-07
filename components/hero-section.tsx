@@ -31,14 +31,32 @@ export function HeroSection({ onOpenModal }: HeroSectionProps) {
           </div>
         </motion.header>
 
+        {/* CTA Button */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="flex justify-center mb-8"
+        >
+          <button
+            onClick={onOpenModal}
+            className="group relative px-10 py-5 bg-[#E81E7C] hover:bg-[#C91868] text-white text-lg sm:text-xl font-bold rounded-full shadow-xl shadow-[#E81E7C]/40 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-[#E81E7C]/50 focus:outline-none focus:ring-4 focus:ring-[#E81E7C]/50"
+            aria-label="Abrir formulário de participação"
+          >
+            <span className="relative z-10">CONFIRMAR SUA PRESENÇA</span>
+            {/* Pulse effect */}
+            <span className="absolute inset-0 rounded-full bg-[#E81E7C] animate-ping opacity-20" />
+          </button>
+        </motion.div>
+
         {/* Main title badge */}
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
           className="flex justify-center mb-8"
         >
-          <h1 className="inline-block px-8 py-4 text-white text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight shadow-lg shadow-black/30 rounded-full bg-gradient-to-r from-[#6b6b6b] to-[#8b7c83]">
+          <h1 className="inline-block px-8 py-4 text-white text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight bg-gradient-to-r ">
             VNS Therapy Night
           </h1>
         </motion.div>
@@ -47,7 +65,7 @@ export function HeroSection({ onOpenModal }: HeroSectionProps) {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
+          transition={{ duration: 0.6, delay: 0.6 }}
           className="max-w-2xl mx-auto text-center mb-8"
         >
           <p className="text-white/90 text-base sm:text-lg leading-relaxed">
@@ -59,29 +77,11 @@ export function HeroSection({ onOpenModal }: HeroSectionProps) {
           </p>
         </motion.div>
 
-        {/* CTA Button */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.8 }}
-          className="flex justify-center mb-10"
-        >
-          <button
-            onClick={onOpenModal}
-            className="group relative px-10 py-5 bg-[#E81E7C] hover:bg-[#C91868] text-white text-lg sm:text-xl font-bold rounded-full shadow-xl shadow-[#E81E7C]/40 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-[#E81E7C]/50 focus:outline-none focus:ring-4 focus:ring-[#E81E7C]/50"
-            aria-label="Abrir formulário de participação"
-          >
-            <span className="relative z-10">EU QUERO PARTICIPAR</span>
-            {/* Pulse effect */}
-            <span className="absolute inset-0 rounded-full bg-[#E81E7C] animate-ping opacity-20" />
-          </button>
-        </motion.div>
-
         {/* Hero image */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.6 }}
+          transition={{ duration: 0.8, delay: 0.8 }}
           className="relative max-w-md mx-auto mb-10"
         >
           <div className="relative aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl shadow-black/30">
