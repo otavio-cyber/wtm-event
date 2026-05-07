@@ -1,18 +1,82 @@
 'use client'
 
-import { useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X } from 'lucide-react'
+import { X, CheckCircle, Loader2 } from 'lucide-react'
 
 interface RegistrationModalProps {
   isOpen: boolean
   onClose: () => void
 }
 
+type ModalStep = 'form' | 'success'
+
 export function RegistrationModal({ isOpen, onClose }: RegistrationModalProps) {
+  const [step, setStep] = useState<ModalStep>('form')
+  const [formData, setFormData] = useState({ name: '', crm: '' })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [errors, setErrors] = useState<{ name?: string; crm?: string }>({})
+
+  const resetModal = useCallback(() => {
+    setStep('form')
+    setFormData({ name: '', crm: '' })
+    setErrors({})
+    setIsSubmitting(false)
+  }, [])
+
   const handleClose = useCallback(() => {
     onClose()
-  }, [onClose])
+    setTimeout(resetModal, 300)
+  }, [onClose, resetModal])
+
+  const validateForm = () => {
+    const newErrors: { name?: string; crm?: string } = {}
+
+    if (!formData.name.trim()) {
+      newErrors.name = 'Nome completo é obrigatório'
+    } else if (formData.name.trim().length < 3) {
+      newErrors.name = 'Nome deve ter pelo menos 3 caracteres'
+    }
+
+    if (!formData.crm.trim()) {
+      newErrors.crm = 'CRM é obrigatório'
+    } else if (!/^\d{4,8}$/.test(formData.crm.trim())) {
+      newErrors.crm = 'CRM deve conter apenas números (4-8 dígitos)'
+    }
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!validateForm()) return
+
+    setIsSubmitting(true)
+
+    try {
+      const response = await fetch('https://formspree.io/f/xykodzew', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nome: formData.name,
+          crm: formData.crm,
+          evento: 'VNS Therapy Night',
+          data_inscricao: new Date().toISOString(),
+        }),
+      })
+
+      if (!response.ok) throw new Error('Erro ao enviar')
+
+      setStep('success')
+    } catch (error) {
+      console.error('Erro ao enviar inscrição:', error)
+      setErrors({ name: 'Erro ao enviar. Tente novamente.' })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
   return (
     <AnimatePresence>
@@ -36,7 +100,7 @@ export function RegistrationModal({ isOpen, onClose }: RegistrationModalProps) {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ duration: 0.3, type: 'spring', damping: 25 }}
-              className="relative w-full max-w-2xl bg-gradient-to-br from-[#6B1E7A] to-[#4C1D6B] rounded-3xl shadow-2xl border border-white/10 overflow-hidden"
+              className="relative w-full max-w-md bg-gradient-to-br from-[#6B1E7A] to-[#4C1D6B] rounded-3xl shadow-2xl border border-white/10 overflow-hidden"
               role="dialog"
               aria-modal="true"
               aria-labelledby="modal-title"
@@ -44,35 +108,140 @@ export function RegistrationModal({ isOpen, onClose }: RegistrationModalProps) {
               {/* Close button */}
               <button
                 onClick={handleClose}
-                className="absolute top-4 right-4 p-2 text-white/60 hover:text-white transition-colors rounded-full hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-[#E81E7C] z-10"
+                className="absolute top-4 right-4 p-2 text-white/60 hover:text-white transition-colors rounded-full hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-[#E81E7C]"
                 aria-label="Fechar modal"
               >
                 <X className="w-5 h-5" />
               </button>
 
-              <div className="p-6 pt-10">
-                <h2
-                  id="modal-title"
-                  className="text-white text-2xl sm:text-3xl font-bold mb-5 text-center"
-                >
-                  Confirme sua Inscrição
-                </h2>
+              <div className="p-8">
+                <AnimatePresence mode="wait">
+                  {/* Step: Form */}
+                  {step === 'form' && (
+                    <motion.div
+                      key="form"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 20 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <h2 id="modal-title" className="text-white text-2xl sm:text-3xl font-bold mb-6 text-center">
+                        Confirme sua Inscrição
+                      </h2>
 
-                {/* Google Form iframe */}
-                <div className="w-full flex justify-center rounded-2xl overflow-hidden">
-                  <iframe
-                    src="https://docs.google.com/forms/d/e/1FAIpQLSe5yojtve_aNi5ZDrkam_E3aElloXrU-hSHkrcXiMzoHoU58w/viewform?embedded=true"
-                    width="640"
-                    height="556"
-                    frameBorder="0"
-                    marginHeight={0}
-                    marginWidth={0}
-                    className="w-full max-w-xl"
-                    title="Formulário de inscrição"
-                  >
-                    Carregando…
-                  </iframe>
-                </div>
+                      <form onSubmit={handleSubmit} className="space-y-5">
+                        <div>
+                          <label htmlFor="name" className="block text-white/80 text-sm font-medium mb-2">
+                            Nome Completo
+                          </label>
+                          <input
+                            type="text"
+                            id="name"
+                            name="name"
+                            value={formData.name}
+                            onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                            className={`w-full px-5 py-4 bg-white/10 border ${errors.name ? 'border-red-400' : 'border-white/20'} rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-[#E81E7C] focus:border-transparent transition-all`}
+                            placeholder="Digite seu nome completo"
+                            autoComplete="name"
+                            disabled={isSubmitting}
+                          />
+                          {errors.name && (
+                            <p className="mt-2 text-red-400 text-sm" role="alert">{errors.name}</p>
+                          )}
+                        </div>
+
+                        <div>
+                          <label htmlFor="crm" className="block text-white/80 text-sm font-medium mb-2">
+                            CRM (número)
+                          </label>
+                          <input
+                            type="text"
+                            id="crm"
+                            name="crm"
+                            value={formData.crm}
+                            onChange={(e) => setFormData(prev => ({ ...prev, crm: e.target.value.replace(/\D/g, '') }))}
+                            className={`w-full px-5 py-4 bg-white/10 border ${errors.crm ? 'border-red-400' : 'border-white/20'} rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-[#E81E7C] focus:border-transparent transition-all`}
+                            placeholder="Digite seu CRM"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            maxLength={8}
+                            disabled={isSubmitting}
+                          />
+                          {errors.crm && (
+                            <p className="mt-2 text-red-400 text-sm" role="alert">{errors.crm}</p>
+                          )}
+                        </div>
+
+                        <button
+                          type="submit"
+                          disabled={isSubmitting}
+                          className="w-full px-8 py-4 bg-[#E81E7C] hover:bg-[#C91868] disabled:bg-[#E81E7C]/50 text-white text-lg font-bold rounded-full transition-all duration-300 hover:scale-[1.02] disabled:hover:scale-100 focus:outline-none focus:ring-4 focus:ring-[#E81E7C]/50 shadow-lg flex items-center justify-center gap-3"
+                        >
+                          {isSubmitting ? (
+                            <>
+                              <Loader2 className="w-5 h-5 animate-spin" />
+                              Enviando...
+                            </>
+                          ) : (
+                            'Confirmar Inscrição'
+                          )}
+                        </button>
+                      </form>
+                    </motion.div>
+                  )}
+
+                  {/* Step: Success */}
+                  {step === 'success' && (
+                    <motion.div
+                      key="success"
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      transition={{ duration: 0.4, type: 'spring', damping: 20 }}
+                      className="text-center py-8"
+                    >
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ delay: 0.2, type: 'spring', damping: 15 }}
+                        className="mb-6"
+                      >
+                        <div className="w-20 h-20 mx-auto bg-[#E81E7C] rounded-full flex items-center justify-center shadow-lg shadow-[#E81E7C]/40">
+                          <CheckCircle className="w-10 h-10 text-white" />
+                        </div>
+                      </motion.div>
+
+                      <motion.h2
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                        id="modal-title"
+                        className="text-white text-2xl sm:text-3xl font-bold mb-3"
+                      >
+                        Inscrição Confirmada!
+                      </motion.h2>
+
+                      <motion.p
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.4 }}
+                        className="text-white/80 text-base mb-8"
+                      >
+                        Obrigado! Aguardamos você no VNS Therapy Night.
+                      </motion.p>
+
+                      <motion.button
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.5 }}
+                        onClick={handleClose}
+                        className="px-8 py-3 bg-white/20 hover:bg-white/30 text-white font-semibold rounded-full transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-white/30"
+                      >
+                        Fechar
+                      </motion.button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
               {/* Decorative gradient line */}
